@@ -1,0 +1,27 @@
+name: 'Detect Large Files'
+description: 'Checks for files larger than a specified size and fails the job if any are found.'
+
+inputs:
+  max_size:
+    description: 'Maximum allowed file size (e.g., 500k, 1000k, 1M)'
+    required: false
+    default: '500k'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run large file check
+      shell: bash
+      run: |
+        echo "Checking for files larger than ${{ inputs.max_size }}"
+        
+        # We use the input variable here instead of hardcoding 500k
+        find . -type f -size +${{ inputs.max_size }} -not -path './.git/*' > large_files.txt
+        
+        if [ -s large_files.txt ]; then
+          echo "Error: The following files are larger than ${{ inputs.max_size }}:"
+          cat large_files.txt
+          exit 1
+        else
+          echo "Success: No files found above ${{ inputs.max_size }}"
+        fi
